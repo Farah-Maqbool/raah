@@ -11,6 +11,7 @@ from google.genai import types
 
 from agents.opportunity_hunter import opportunity_hunter
 from agents.qualifier import qualifier
+from agents.brief_generator import brief_generator
 
 load_dotenv()
 
@@ -18,7 +19,8 @@ raah_workflow = Workflow(
     name = "raah_flow",
     edges = [
         ("START", opportunity_hunter),
-        (opportunity_hunter, qualifier)
+        (opportunity_hunter, qualifier),
+        (qualifier,brief_generator)
     ]
 )
 
