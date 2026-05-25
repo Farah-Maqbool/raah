@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import asyncio
 from dotenv import load_dotenv
 from google.adk import Workflow
@@ -39,3 +43,14 @@ async def run_raah_flow():
             types.Part(text="Find and qualify 3 real business problems for student teams to solve.")
         ]
     )
+
+    async for event in runner.run_async(
+        user_id = "raah_user",
+        session_id = session.id,
+        new_message = content
+    ):
+        if event.is_final_response():
+            print(event.content.parts[0].text)
+
+if __name__ == "__main__":
+    asyncio.run(run_raah_flow())
