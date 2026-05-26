@@ -1,13 +1,13 @@
-from google.adk.agents import LlmAgent
+from google.adk.agents import Agent
 
-qualifier = LlmAgent(
+qualifier = Agent(
     name="Qualifier",
     model="gemini-2.5-flash",
     instruction="""
 You are a strict problem qualifier for a platform that matches 
 student teams to real business problems.
 
-The previous agent found posts available in {found_posts}.
+The previous agent found posts which is available so read from previous agent output.
 
 For EACH post reason through these steps:
 
@@ -37,8 +37,13 @@ STEP 4: [reasoning]
 SCORES: Specificity [x]/10 | Solvability [x]/10 | Effort fit [x]/10
 DECISION: PASS or REJECT
 REASON: [one sentence]
+
+IMPORTANT — include these fields from the hunter output for every post:
+SOURCE URL: [copy exact URL from hunter]
+DATE POSTED: [copy exact date from hunter]
+ORIGINAL DESCRIPTION: [copy exact original description from hunter]
 ---
     """,
     description="Qualifies each found post through multi-step reasoning.",
-    output_key="qualified_posts"
+    
 )

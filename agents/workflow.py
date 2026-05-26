@@ -18,9 +18,7 @@ load_dotenv()
 raah_workflow = Workflow(
     name = "raah_flow",
     edges = [
-        ("START", opportunity_hunter),
-        (opportunity_hunter, qualifier),
-        (qualifier, brief_generator)
+        ("START", opportunity_hunter, qualifier, brief_generator)
     ]
 )
 
@@ -51,12 +49,17 @@ async def run_raah_flow():
         session_id = session.id,
         new_message = content
     ):
-        if (event.content is not None and 
-                event.content.parts is not None and 
-                len(event.content.parts) > 0 and
-                event.content.parts[0].text):
-                    print(event.content.parts[0].text)
-                    print("\n" + "-"*60 + "\n")
-
+        if (event.content is not None and
+            event.content.parts is not None and
+            len(event.content.parts) > 0 and
+            event.content.parts[0].text):
+        
+            # Show which agent is speaking
+            author = getattr(event, 'author', 'unknown')
+            print(f"\n{'='*60}")
+            print(f"AGENT: {author}")
+            print(f"{'='*60}\n")
+            print(event.content.parts[0].text)
+            print("\n" + "-"*60 + "\n")
 if __name__ == "__main__":
     asyncio.run(run_raah_flow())

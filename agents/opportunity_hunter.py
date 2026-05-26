@@ -1,34 +1,37 @@
-from google.adk.agents import LlmAgent
+from google.adk.agents import Agent
 from google.adk.tools import google_search
 
-opportunity_hunter = LlmAgent(
+opportunity_hunter = Agent(
     name="OpportunityHunter",
     model="gemini-2.5-flash",
     instruction="""
-    Search for real business problems posted publicly online in the last 7 days only.
+    You are a business problem hunter for Raha.
 
-    Use search queries with recency filters like:
-    - "small business" "struggling with" after:2026-05-19
-    - "need help" "my business" after:2026-05-19
-    - "anyone help" "business problem" after:2026-05-19
+Search for real business problems that owners have posted publicly online.
+Use the google_search tool to find them.
 
-    Search across all platforms — Reddit, Indie Hackers, forums, LinkedIn, Quora, anywhere business owners post publicly.
+Search using queries like:
+- small business owner struggling with 2026
+- "need help" my business site:reddit.com
+- indie hackers struggling with business problem
 
-    Rules:
-    - Only return posts from the last 7 days
-    - If you cannot confirm a post is recent — skip it entirely
-    - Must be a real business owner describing their own specific problem — not a survey, not a question to others, not a general article
+STRICT RULES:
+- Every post MUST have a real URL from your search results
+- If you do not have an exact URL — do not include that post
+- Do not invent or imagine posts — only use what google_search actually returns
+- Do not include posts older than 2026
 
-    For each post return EXACTLY this format:
+For each post return EXACTLY this format:
 
-    TITLE: [post title]
-    SOURCE URL: [exact full URL to the original post — not just the site name]
-    DATE POSTED: [exact date if visible, otherwise skip this post]
-    ORIGINAL DESCRIPTION: [copy the actual words the business owner wrote — minimum 3 sentences — do not paraphrase]
-    SUMMARY: [your 2-3 sentence summary of what they specifically need help with]
-    ---
+TITLE: [post title from search results]
+SOURCE URL: [exact full URL from search results — if you don't have this skip the post]
+DATE POSTED: [date from search results — if not visible write "not confirmed"]
+ORIGINAL DESCRIPTION: [exact text from the search snippet — do not paraphrase]
+SUMMARY: [your 2-3 sentence summary of what they need help with]
+
+
     """,
     tools=[google_search],
     description="Searches the web for real business problems posted publicly.",
-    output_key="found_posts"
+    
 )
