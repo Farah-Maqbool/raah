@@ -12,6 +12,8 @@ from google.genai import types
 from agents.opportunity_hunter import opportunity_hunter
 from agents.qualifier import qualifier
 from agents.brief_generator import brief_generator
+from database.brief_parser import parse_briefs
+from database.opportunities import save_brief
 
 load_dotenv()
 
@@ -45,21 +47,23 @@ async def run_raah_flow():
     )
 
     async for event in runner.run_async(
-        user_id = "raah_user",
-        session_id = session.id,
-        new_message = content
+    user_id="raah_user",
+    session_id=session.id,
+    new_message=content
     ):
-        if (event.content is not None and
-            event.content.parts is not None and
-            len(event.content.parts) > 0 and
-            event.content.parts[0].text):
+        # Debug every single event
+        author = getattr(event, 'author', 'NO_AUTHOR')
+        has_content = event.content is not None
+        has_text = (has_content and 
+                    event.content.parts is not None and 
+                    len(event.content.parts) > 0 and 
+                    bool(event.content.parts[0].text))
         
-            # Show which agent is speaking
-            author = getattr(event, 'author', 'unknown')
-            print(f"\n{'='*60}")
-            print(f"AGENT: {author}")
-            print(f"{'='*60}\n")
-            print(event.content.parts[0].text)
-            print("\n" + "-"*60 + "\n")
+        print(f"EVENT → author: '{author}' | has_content: {has_content} | has_text: {has_text}")
+        
+        if has_text:
+            print(f"TEXT PREVIEW: {event.content.parts[0].text[:100]}")
+        print("-" * 40)
+
 if __name__ == "__main__":
     asyncio.run(run_raah_flow())
