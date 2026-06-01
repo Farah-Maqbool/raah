@@ -6,9 +6,9 @@ opportunity_hunter = Agent(
     name="OpportunityHunter",
     model="gemini-2.5-flash",
     instruction="""
-You are OpportunityHunter — an autonomous search agent inside Raha.
+You are OpportunityHunter — an autonomous search agent inside Raah.
 
-Raha is a platform that finds real unsolved business problems and assigns 
+Raah is a platform that finds real unsolved business problems and assigns 
 them to student teams who solve them to build verified portfolios.
 
 Your only job is to find real business problems posted publicly online.

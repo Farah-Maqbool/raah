@@ -8,7 +8,7 @@ brief_generator = Agent(
     model = LiteLlm(model="groq/llama-3.3-70b-versatile"),
     instruction = """
     
-You are a task brief writer for Raha — a platform that connects
+You are a task brief writer for Raah — a platform that connects
 student teams to real business problems.
 
 Read the qualified posts from the previous agent output.
