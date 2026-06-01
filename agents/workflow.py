@@ -46,24 +46,58 @@ async def run_raah_flow():
         ]
     )
 
+    print("\nRAAH PIPELINE STARTING...\n")
+    print("=" * 60)
+
+    final_output = ""
+
     async for event in runner.run_async(
     user_id="raah_user",
     session_id=session.id,
     new_message=content
     ):
-        # Debug every single event
-        author = getattr(event, 'author', 'NO_AUTHOR')
-        has_content = event.content is not None
-        has_text = (has_content and 
-                    event.content.parts is not None and 
-                    len(event.content.parts) > 0 and 
-                    bool(event.content.parts[0].text))
         
-        print(f"EVENT → author: '{author}' | has_content: {has_content} | has_text: {has_text}")
-        
+        author = getattr(event, "author")
+        has_text = (
+            event.content is not None and 
+            event.content.parts is not None and
+            len(event.content.parts) > 0 and
+            bool(event.content.parts[0].text)
+        )
+
         if has_text:
-            print(f"TEXT PREVIEW: {event.content.parts[0].text[:100]}")
-        print("-" * 40)
+            text = event.content.parts[0].text
+
+            print(f"\n{'=' * 60}")
+            print(f"AGENT: {author}")
+            print(f"{'=' * 60}\n")
+            print(text)
+
+            if author=="BriefGenerator":
+                final_output = text
+    
+    print(f"\n{'=' * 60}")
+    print("SAVING TO MONGODB...")
+    print("=" * 60)
+
+    if final_output:
+        briefs = parse_briefs(final_output)
+
+        saved = 0
+        skipped = 0
+
+        for brief in briefs:
+            if save_brief(brief):
+                saved += 1
+            else:
+                skipped += 1
+            
+        print(f"Saved: {saved} new briefs")
+        print(f"Skipped: {skipped} duplicates")
+    else:
+        print("No briefs")
+
+
 
 if __name__ == "__main__":
     asyncio.run(run_raah_flow())

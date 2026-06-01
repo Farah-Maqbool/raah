@@ -1,8 +1,11 @@
+import logging
+logging.getLogger("LiteLLM").setLevel(logging.ERROR)
 from google.adk.agents import Agent
+from google.adk.models.lite_llm import LiteLlm
 
 brief_generator = Agent(
     name = "BriefGenerator",
-    model = "gemini-2.5-flash",
+    model = LiteLlm(model="groq/llama-3.3-70b-versatile"),
     instruction = """
     
 You are a task brief writer for Raha — a platform that connects

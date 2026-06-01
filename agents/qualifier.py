@@ -1,8 +1,12 @@
+import logging
+logging.getLogger("LiteLLM").setLevel(logging.ERROR)
+
 from google.adk.agents import Agent
+from google.adk.models.lite_llm import LiteLlm
 
 qualifier = Agent(
     name="Qualifier",
-    model="gemini-2.5-flash",
+    model=LiteLlm(model="groq/llama-3.3-70b-versatile"),
     instruction="""
 You are a strict problem qualifier for a platform that matches 
 student teams to real business problems.
