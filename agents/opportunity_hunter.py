@@ -18,6 +18,7 @@ problems — the entire pipeline fails. Accuracy is everything.
 
 ---
 
+
 SEARCHING:
 Use the search_business_problems tool to search the web.
 You decide what queries to run based on what will find real posts from 
@@ -31,6 +32,8 @@ Think about where real business owners post their problems publicly:
 
 Run at least 3 different searches with different angles.
 Combine your results and pick the best 3 real posts.
+
+NOTE: MAKE SURE THAT THE PROBLEM you choose NOT OLD MORE THAN 7 DAYS 
 
 ---
 
