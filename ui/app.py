@@ -15,7 +15,7 @@ if "user" not in st.session_state:
     st.session_state.user = None
 
 st.set_page_config(
-    page_title="Raah — Real Work. Real Proof.",
+    page_title="Raah",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -376,7 +376,7 @@ else:
 
         page = st.radio(
             "",
-            ["Home", "My Brief", "Team Chat", "Run Agent"],
+            ["Home", "My Brief", "Team Chat"],
             label_visibility="collapsed"
         )
 
@@ -450,9 +450,9 @@ else:
 
         try:
             from database.opportunities import get_open_briefs
-            from database.profiles import get_available_profile
+            from database.auth import get_all_users
             briefs = get_open_briefs()
-            profiles = get_available_profile()
+            profiles = get_all_users()
             c1, c2, c3 = st.columns(3)
             with c1:
                 st.metric("Open Briefs", len(briefs))
@@ -711,119 +711,4 @@ else:
         except Exception as e:
             st.error(f"Error: {e}")
 
-    # ─────────────────────────────────────────
-    # RUN AGENT
-    # ─────────────────────────────────────────
-    elif page == "Run Agent":
-
-        st.markdown('<div class="page-title">Run the Agent.</div>', unsafe_allow_html=True)
-        st.markdown('<div class="page-subtitle">Live pipeline — each agent output appears as it runs</div>', unsafe_allow_html=True)
-
-        st.markdown("""
-        <div style="font-family: DM Mono, monospace; font-size: 11px; color: #4a4a4a; line-height: 2.2; border: 1px solid #1e1e1e; padding: 20px; margin-bottom: 32px;">
-        PIPELINE &nbsp;&nbsp;/&nbsp; OpportunityHunter &rarr; Qualifier &rarr; BriefGenerator &rarr; MongoDB<br>
-        MODEL &nbsp;&nbsp;&nbsp;&nbsp;/&nbsp; Gemini 2.5 Flash (search) + Groq Llama 3.3 70B (reasoning)<br>
-        FRAMEWORK&nbsp;/&nbsp; Google ADK 2.0 Workflow<br>
-        DATABASE &nbsp;/&nbsp; MongoDB Atlas
-        </div>
-        """, unsafe_allow_html=True)
-
-        run_clicked = st.button("Run Pipeline", type="primary")
-        terminal = st.empty()
-
-        def render_terminal(lines):
-            html = '<div class="terminal">'
-            for text, cls in lines:
-                html += f'<div class="{cls}">{text}</div>'
-            html += '</div>'
-            terminal.markdown(html, unsafe_allow_html=True)
-
-        if run_clicked:
-            log = []
-
-            def add(text, cls="t-text"):
-                log.append((text, cls))
-                render_terminal(log)
-
-            add("RAAH PIPELINE STARTING", "t-agent")
-            add("Initializing session and workflow...")
-
-            output_queue = queue.Queue()
-
-            def stream_pipeline():
-                import io
-
-                class QueueWriter(io.TextIOBase):
-                    def write(self, s):
-                        if s.strip():
-                            output_queue.put(s.strip())
-                        return len(s)
-
-                try:
-                    import sys as _sys
-                    old_stdout = _sys.stdout
-                    _sys.stdout = QueueWriter()
-                    from agents.workflow import run_raah_flow
-                    asyncio.run(run_raah_flow())
-                    _sys.stdout = old_stdout
-                    output_queue.put("__DONE__")
-                except Exception as e:
-                    output_queue.put(f"__ERROR__{str(e)}")
-
-            thread = threading.Thread(target=stream_pipeline)
-            thread.start()
-
-            add("OPPORTUNITY HUNTER", "t-agent")
-            add("Searching for real business problems...")
-
-            current_agent = "hunter"
-
-            while True:
-                try:
-                    msg = output_queue.get(timeout=120)
-
-                    if msg == "__DONE__":
-                        add("PIPELINE COMPLETE", "t-agent")
-                        add("New briefs saved to MongoDB.", "t-success")
-                        add("Duplicates automatically skipped.", "t-dim")
-                        break
-                    elif msg.startswith("__ERROR__"):
-                        add("PIPELINE ERROR", "t-agent")
-                        add(msg.replace("__ERROR__", ""), "t-text")
-                        break
-                    else:
-                        if "AGENT: Qualifier" in msg and current_agent != "qualifier":
-                            current_agent = "qualifier"
-                            add("QUALIFIER", "t-agent")
-                            add("Reasoning through each post...")
-                        elif "AGENT: BriefGenerator" in msg and current_agent == "qualifier":
-                            current_agent = "brief"
-                            add("BRIEF GENERATOR", "t-agent")
-                            add("Generating structured task briefs...")
-                        elif "SAVING" in msg:
-                            add("MONGODB", "t-agent")
-                            add("Saving briefs...")
-                        elif "Saved:" in msg:
-                            add(msg, "t-success")
-                        elif "Skipped" in msg or "duplicate" in msg.lower():
-                            add(msg, "t-dim")
-                        else:
-                            clean = msg[:120] + ("..." if len(msg) > 120 else "")
-                            add(clean)
-
-                except queue.Empty:
-                    add("Timeout.", "t-text")
-                    break
-
-            thread.join()
-
-        else:
-            render_terminal([
-                ("WAITING FOR TRIGGER", "t-agent"),
-                ("Press Run Pipeline to start.", "t-dim"),
-                ("", "t-dim"),
-                ("The agent will search for real business problems,", "t-dim"),
-                ("qualify each one through multi-step reasoning,", "t-dim"),
-                ("generate structured task briefs,", "t-dim"),
-                ("and save new briefs to MongoDB automatically.", "t-dim"),
-            ])
+    

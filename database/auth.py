@@ -67,3 +67,11 @@ def get_user_by_email(email) -> dict:
     collection = get_users_collection()
     user = collection.find_one({"email": email}, {"password": 0, "_id": 0})
     return user or {}
+
+def get_all_users() -> list:
+    """Get all users available for team matching."""
+    collection = get_users_collection()
+    return list(collection.find(
+        {"available": True},
+        {"password": 0, "_id": 0}
+    ))
