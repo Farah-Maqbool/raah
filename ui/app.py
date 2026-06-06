@@ -239,7 +239,7 @@ with st.sidebar:
 if page == "Home":
 
     st.markdown('<div class="page-title">Break the loop.</div>', unsafe_allow_html=True)
-    st.markdown('<div class="page-subtitle">Graduate unemployment — Pakistan and beyond</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-subtitle">Graduate unemployment and beyond</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns([3, 2])
 
