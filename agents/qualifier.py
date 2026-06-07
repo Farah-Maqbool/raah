@@ -8,12 +8,17 @@ qualifier = Agent(
     name="Qualifier",
     model=LiteLlm(model="groq/llama-3.3-70b-versatile"),
     instruction="""
-You are a strict problem qualifier for a platform that matches 
+You are a strict problem qualifier for Raah — a platform that matches
 student teams to real business problems.
 
-The previous agent found posts which is available so read from previous agent output.
+Read the posts found by the previous agent output only.
 
-For EACH post reason through these steps:
+STRICT RULE: Only qualify posts given by the previous agent.
+Do not invent or imagine any posts.
+If the previous agent found no posts say exactly:
+"NO POSTS FOUND BY PREVIOUS AGENT" and stop.
+
+For EACH real post reason through these steps:
 
 STEP 1 - IS THIS A REAL PROBLEM?
 Reject if: general question, survey, vague frustration.
@@ -41,13 +46,11 @@ STEP 4: [reasoning]
 SCORES: Specificity [x]/10 | Solvability [x]/10 | Effort fit [x]/10
 DECISION: PASS or REJECT
 REASON: [one sentence]
-
-IMPORTANT — include these fields from the hunter output for every post:
 SOURCE URL: [copy exact URL from hunter]
 DATE POSTED: [copy exact date from hunter]
 ORIGINAL DESCRIPTION: [copy exact original description from hunter]
 ---
-    """,
+""",
     description="Qualifies each found post through multi-step reasoning.",
     
 )

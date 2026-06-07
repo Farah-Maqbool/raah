@@ -45,7 +45,7 @@ def get_available_profile_tool():
         output += f"NAME: {profile.get('name', 'N/A')}\n"
         output += f"SKILLS: {profile.get('skills', [])}\n"
         output += f"FIELD: {profile.get('field', 'N/A')}\n"
-        output += f"EMAIL: {profile.get('email', 'N/A')}\n"
+        output += f"EMAIL: {profile.get('email', 'N/A')}\n" 
         output += "---\n"
     return output
 
