@@ -381,10 +381,10 @@ else:
         )
 
         st.markdown("<br>" * 8, unsafe_allow_html=True)
-        st.markdown(
-            '<div style="font-family: DM Mono, monospace; font-size: 10px; color: #2a2a2a; letter-spacing: 1px;">GOOGLE CLOUD HACKATHON 2026</div>',
-            unsafe_allow_html=True
-        )
+        # st.markdown(
+        #     '<div style="font-family: DM Mono, monospace; font-size: 10px; color: #2a2a2a; letter-spacing: 1px;">GOOGLE CLOUD HACKATHON 2026</div>',
+        #     unsafe_allow_html=True
+        # )
 
         if st.button("Logout", use_container_width=True):
             st.session_state.user = None
@@ -469,31 +469,25 @@ else:
     elif page == "My Brief":
 
         st.markdown('<div class="page-title">My Brief.</div>', unsafe_allow_html=True)
-        st.markdown('<div class="page-subtitle">Your matched business problem</div>', unsafe_allow_html=True)
+        st.markdown('<div class="page-subtitle">Your assigned business problem</div>', unsafe_allow_html=True)
 
         try:
             from database.opportunities import get_open_briefs
             from database.teams import get_teams_by_member, update_team_status
-            from database.auth import get_user_by_email
 
             user_email = user["email"]
-            user_skills = user.get("skills", [])
-
-            # Find briefs matched to this user by skills
             briefs = get_open_briefs()
             my_teams = get_teams_by_member(user_email)
-            assigned_urls = [t["brief_source_url"] for t in my_teams]
 
-            # Find matched briefs not yet assigned
-            matched_briefs = []
-            for brief in briefs:
-                skills_needed = brief.get("skills_needed", [])
-                overlap = [s for s in skills_needed if any(s.lower() in us.lower() for us in user_skills)]
-                if overlap:
-                    matched_briefs.append((brief, overlap))
+            if not my_teams:
+                st.markdown("""
+                <div style="border: 1px solid #1e1e1e; padding: 40px; text-align: center;
+                font-family: DM Mono, monospace; font-size: 12px; color: #4a4a4a;">
+                No brief assigned yet. The agent is finding a problem that fits your skills.
+                </div>
+                """, unsafe_allow_html=True)
 
-            # Show assigned team briefs first
-            if my_teams:
+            else:
                 for team in my_teams:
                     brief_url = team["brief_source_url"]
                     brief = next((b for b in briefs if b.get("source_url") == brief_url), None)
@@ -523,7 +517,6 @@ else:
 
                     st.markdown(f'<div class="status-badge">Status: {status.upper()}</div>', unsafe_allow_html=True)
 
-                    # Original words
                     st.markdown("""
                     <div style="font-family: DM Mono, monospace; font-size: 10px;
                     color: #4a4a4a; letter-spacing: 1.5px; margin-bottom: 8px;">ORIGINAL WORDS</div>
@@ -536,48 +529,80 @@ else:
                     </div>
                     """, unsafe_allow_html=True)
 
+                    # Team members
+                    members = team.get("members", [])
+                    st.markdown(f"""
+                    <div style="font-family: DM Mono, monospace; font-size: 10px;
+                    color: #4a4a4a; letter-spacing: 1px; margin-bottom: 24px;">
+                    TEAM: {" &nbsp;·&nbsp; ".join(members)}
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                    # WhatsApp group
+                    from database.teams import save_whatsapp_link, get_whatsapp_link
+                    existing_link = get_whatsapp_link(brief_url)
+
+                    if existing_link:
+                        st.markdown(f"""
+                        <div style="background: #0f1f16; border: 1px solid #2a4a35;
+                        padding: 14px 18px; margin-bottom: 24px; font-family: DM Mono,
+                        monospace; font-size: 11px; color: #4a9463;">
+                        TEAM CHAT &nbsp;·&nbsp;
+                        <a href="{existing_link}" target="_blank"
+                        style="color: #4a9463; text-decoration: none;">
+                        Join WhatsApp Group
+                        </a>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    else:
+                        with st.form(f"wa_form_{brief_url}"):
+                            wa_link = st.text_input("Paste WhatsApp group invite link")
+                            if st.form_submit_button("Save Group Link", type="primary"):
+                                if wa_link.strip():
+                                    save_whatsapp_link(brief_url, wa_link.strip())
+                                    st.success("WhatsApp link saved.")
+                                    st.rerun()
+
                     st.divider()
 
-                    # Status update section
+                    # Status updates
                     st.markdown("""
                     <div style="font-family: DM Mono, monospace; font-size: 10px;
                     color: #4a4a4a; letter-spacing: 1.5px; margin-bottom: 16px;">UPDATE STATUS</div>
                     """, unsafe_allow_html=True)
 
-                    if status == "assigned" or status == "discussing":
-                        if st.button("Mark as Pitched to Business", key=f"pitch_{brief_url}"):
-                            pitch_proof = st.text_input("Paste proof link (screenshot, email, etc.)", key=f"proof_{brief_url}")
-                            if pitch_proof:
-                                update_team_status(brief_url, "pitched", {"pitch_proof": pitch_proof})
-                                st.success("Status updated to pitched.")
-                                st.rerun()
+                    if status in ["assigned", "discussing"]:
+                        with st.form(f"pitch_form_{brief_url}"):
+                            pitch_proof = st.text_input("Paste proof of pitch — screenshot link, email thread, etc.")
+                            if st.form_submit_button("Mark as Pitched", type="primary"):
+                                if pitch_proof:
+                                    update_team_status(brief_url, "pitched", {"pitch_proof": pitch_proof})
+                                    st.success("Status updated to pitched.")
+                                    st.rerun()
 
                     if status == "pitched":
                         col1, col2 = st.columns(2)
                         with col1:
-                            if st.button("Mark as Hired", key=f"hired_{brief_url}"):
+                            if st.button("Mark as Hired", key=f"hired_{brief_url}", type="primary"):
                                 update_team_status(brief_url, "hired")
                                 st.success("Congratulations. Status updated to hired.")
                                 st.rerun()
                         with col2:
-                            if st.button("Mark as Rejected", key=f"rejected_{brief_url}"):
-                                reason = st.text_input("Why were you rejected?", key=f"reason_{brief_url}")
-                                update_team_status(brief_url, "rejected", {"rejection_reason": reason})
-                                st.info("Status updated. A new brief will be assigned soon.")
-                                st.rerun()
+                            with st.form(f"reject_form_{brief_url}"):
+                                reason = st.text_input("Reason for rejection")
+                                if st.form_submit_button("Mark as Rejected"):
+                                    update_team_status(brief_url, "rejected", {"rejection_reason": reason})
+                                    st.info("A new brief will be assigned soon.")
+                                    st.rerun()
 
                     if status == "hired":
-                        st.markdown("""
-                        <div style="font-family: DM Mono, monospace; font-size: 10px;
-                        color: #4a4a4a; letter-spacing: 1.5px; margin-bottom: 12px;">SUBMIT DELIVERABLE</div>
-                        """, unsafe_allow_html=True)
-                        with st.form(f"submit_{brief_url}"):
+                        with st.form(f"submit_form_{brief_url}"):
                             deliverable = st.text_input("Deliverable link or description")
-                            submitted = st.form_submit_button("Submit Final Work", type="primary")
-                            if submitted and deliverable:
-                                update_team_status(brief_url, "submitted", {"deliverable": deliverable})
-                                st.success("Work submitted. Verified record will be generated.")
-                                st.rerun()
+                            if st.form_submit_button("Submit Final Work", type="primary"):
+                                if deliverable:
+                                    update_team_status(brief_url, "submitted", {"deliverable": deliverable})
+                                    st.success("Work submitted. Verified record will be generated.")
+                                    st.rerun()
 
                     if status == "submitted":
                         st.markdown("""
@@ -586,33 +611,6 @@ else:
                         Work submitted. Your verified record is being generated.
                         </div>
                         """, unsafe_allow_html=True)
-
-            elif matched_briefs:
-                st.markdown("""
-                <div style="font-family: DM Mono, monospace; font-size: 11px; color: #4a4a4a; margin-bottom: 16px;">
-                You have not been assigned a team yet. These briefs match your skills.
-                </div>
-                """, unsafe_allow_html=True)
-                for brief, overlap in matched_briefs[:3]:
-                    st.markdown(f"""
-                    <div style="background: #0f0f0f; border: 1px solid #1e1e1e;
-                    padding: 16px 20px; margin-bottom: 8px;">
-                        <div style="font-family: Syne, sans-serif; font-size: 15px;
-                        font-weight: 700; color: #e8e4dc; margin-bottom: 6px;">
-                        {brief.get("problem", "N/A")}
-                        </div>
-                        <div style="font-family: DM Mono, monospace; font-size: 10px; color: #4a4a4a;">
-                        Matching skills: {", ".join(overlap)}
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-            else:
-                st.markdown("""
-                <div style="border: 1px solid #1e1e1e; padding: 40px; text-align: center;
-                font-family: DM Mono, monospace; font-size: 12px; color: #4a4a4a;">
-                No matching briefs yet. The agent is hunting for problems that fit your skills.
-                </div>
-                """, unsafe_allow_html=True)
 
         except Exception as e:
             st.error(f"Error: {e}")

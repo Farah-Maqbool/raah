@@ -63,3 +63,18 @@ def update_team_status(brief_source_url: str, status: str, extra: dict = {}) -> 
         {"$set": update}
     )
     return result.modified_count > 0
+
+
+def save_whatsapp_link(brief_source_url: str, link: str) -> bool:
+    collection = get_teams_collection()
+    result = collection.update_one(
+        {"brief_source_url": brief_source_url},
+        {"$set": {"whatsapp_link": link}}
+    )
+    return result.modified_count > 0
+
+
+def get_whatsapp_link(brief_source_url: str) -> str:
+    collection = get_teams_collection()
+    team = collection.find_one({"brief_source_url": brief_source_url})
+    return team.get("whatsapp_link", "") if team else ""
