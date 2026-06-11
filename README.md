@@ -55,7 +55,8 @@ Verified work record created permanently
 | Component       | Technology                            |
 | --------------- | ------------------------------------- |
 | Agent Framework | Google ADK 2.0                        |
-| Search          | Gemini 2.5 Flash + Google Search Tool |
+| Opportunity Discovery | Groq Llama 3.3 70B              |
+| Search Layer    | Exa + Tavily                          |
 | Reasoning       | Groq Llama 3.3 70B via LiteLLM        |
 | Database        | MongoDB Atlas                         |
 | UI              | Streamlit                             |
@@ -69,14 +70,16 @@ Raah uses a multi-agent workflow built with Google ADK 2.0.
 
 ### OpportunityHunter
 
-Uses Gemini 2.5 Flash with the Google Search tool to discover publicly posted business problems.
+Uses Groq Llama 3.3 70B with Exa and Tavily search tools to discover real business problems posted publicly online.
 
 **Output:**
 
-* Original post URL
-* Date posted
-* Source platform
-* Problem description
+* Title
+* Source URL
+* Date Posted
+* Original Description
+* Business Problem Summary
+* Opportunity Justification
 
 ### Qualifier
 
@@ -136,6 +139,8 @@ raah/
 │   ├── teams.py                 # Team management
 │   ├── messages.py              # Team communication
 │   └── brief_parser.py          # Agent output parsing
+├── tools/
+|   └── search_tools.py         # search problems
 │
 ├── ui/
 │   └── app.py                   # Streamlit application
@@ -153,8 +158,9 @@ raah/
 
 * Python 3.11+
 * MongoDB Atlas Account
-* Google AI Studio API Key
 * Groq API Key
+* Tavily API Key
+* EXA Api Key
 
 ### Installation
 
@@ -183,6 +189,8 @@ Create a `.env` file in the project root:
 GOOGLE_API_KEY=your_gemini_api_key
 GROQ_API_KEY=your_groq_api_key
 MONGODB_URI=your_mongodb_connection_string
+TAVILY_API_KEY=your_tavily_api_key
+EXA_API_KEY=your_exa_api_key
 ```
 
 ---
@@ -273,14 +281,9 @@ Each agent reads the shared state produced by the previous agent, eliminating ma
 
 ### Model Selection Strategy
 
-**Gemini 2.5 Flash**
-
-* Opportunity discovery
-* Web search integration
-* Fast retrieval
-
 **Groq Llama 3.3 70B**
 
+* Opportunity discovery
 * Qualification reasoning
 * Brief generation
 * Lower operational cost
@@ -289,6 +292,26 @@ Each agent reads the shared state produced by the previous agent, eliminating ma
 This approach reserves Gemini usage for search-intensive tasks while using Groq for reasoning-heavy operations.
 
 ---
+
+### Search Tools
+
+**Exa**
+
+Used for:
+
+* Semantic web search
+* Founder content discovery
+* Startup and business problem retrieval
+
+**Tavily**
+
+Used for:
+
+* Web search enrichment
+* Broader source coverage
+* Fallback retrieval when needed
+
+Together, Exa and Tavily provide high-quality retrieval while Groq performs reasoning and decision-making across the Raah pipeline.
 
 ## Vision
 
