@@ -11,8 +11,6 @@ load_dotenv()
 
 
 
-
-
 def get_database():
     # Try Streamlit secrets first, then .env
     try:
