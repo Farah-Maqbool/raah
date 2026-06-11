@@ -5,18 +5,26 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import certifi
 from pymongo import MongoClient
 from dotenv import load_dotenv
+import streamlit as st
 
 load_dotenv()
 
+
+
+
+
 def get_database():
-    uri = os.getenv("MONGODB_URI")
-    
+    # Try Streamlit secrets first, then .env
+    try:
+        uri = st.secrets["MONGODB_URI"]
+    except Exception:
+        uri = os.getenv("MONGODB_URI")
+
     if not uri:
-        raise ValueError("MONGODB_URI not found in .env file")
-    
+        raise ValueError("MONGODB_URI not found")
+
     client = MongoClient(uri, tlsCAFile=certifi.where())
     return client["raah"]
-
 
 def get_opportunities_collection():
     db = get_database()
